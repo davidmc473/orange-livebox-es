@@ -55,6 +55,8 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[~]` requiere validación del usuari
 - [x] Spec 003: convivencia con la web del router — sesión única (`specs/003-convivencia-sesion/`)
 - [x] Spec 004: gestión de dispositivos — acceso a Internet, horarios y nombre (`specs/004-gestion-dispositivos/`)
 - [x] Spec 005: descubrimiento automático por DHCP/ARP (`specs/005-descubrimiento/`)
-- [ ] Spec 006: Livebox+ (`ARPLUS6`) — confirmar compatibilidad con fixtures de un usuario
-- [ ] Spec 007: registro de llamadas (`call_log`) como sensor / evento
-- [ ] Spec 008: otros routers Orange ES (Livebox Infinity, Livebox Fibra antiguo)
+- [x] Spec 006: control de los LED — **descartada**: sin efecto en el Livebox 6 (`specs/006-control-led/`)
+- [ ] Spec 007: Livebox+ (`ARPLUS6`) y Livebox 7 (según el usuario: 3 × RJ45 1G + 1 × 2,5G) — confirmar
+      con fixtures de esos modelos
+- [ ] Spec 008: registro de llamadas (`call_log`) como sensor / evento
+- [ ] Spec 009: otros routers Orange ES (Livebox Infinity, Livebox Fibra antiguo)

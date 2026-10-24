@@ -13,7 +13,7 @@ Sesión de exploración: 2026-10-24, router en `192.168.1.1`.
 | `boot_code_version` | `SAHBL_20.99.14` |
 | `manufacturer` | `ARLT` (Arcadyan) · `isp`: `Orange` |
 | WAN | `GPON` (ONT integrada), `wan_type=5` |
-| Puertos | LAN1–LAN4 (1G). El firmware declara además «2.5G LAN» y un 6.º puerto que **este modelo no tiene** (la web solo muestra LAN1–LAN4; corregido tras aviso del usuario) |
+| Puertos | LAN1–LAN4 (1G). El firmware declara además «2.5G LAN» y un 6.º puerto que **este modelo no tiene** (la web solo muestra LAN1–LAN4; corregido tras aviso del usuario). Según el usuario, el Livebox 7 tiene 3 × 1G + 1 × 2,5G: los puertos se definen por modelo (`LAN_PORTS_BY_MODEL`) |
 
 ## Hallazgos clave
 

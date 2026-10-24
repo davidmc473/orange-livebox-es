@@ -243,22 +243,34 @@ def parse_optical(docs: Mapping[str, JsDocument]) -> OpticalStatus | None:
     )
 
 
-#: puertos que muestra la web (``support_information_lan.htm``: lan1…lan4). El firmware
-#: declara además «2.5G LAN» (LogName4) y un 6.º puerto que el Livebox 6 español no tiene.
-WEB_VISIBLE_LAN_PORTS = 4
+#: puertos que muestra la web (``support_information_lan.htm``) por modelo. El firmware es
+#: común a varios equipos y declara más puertos de los que tiene cada uno: el Livebox 6
+#: español anuncia «2.5G LAN» y un 6.º puerto que físicamente no existen.
+LAN_PORTS_BY_MODEL: dict[str, tuple[int, ...]] = {
+    "ARLTFIBRA6": (1, 2, 3, 4),
+}
 
 
 def parse_lan_ports(docs: Mapping[str, JsDocument]) -> list[LanPort]:
     lan = _doc(docs, "infoLan")
+    model_id = _text(_doc(docs, "router_status").var("hardware_model"))
+    # Modelo conocido: sus puertos. Desconocido: todos los que tienen nombre (LogName)
+    visible = LAN_PORTS_BY_MODEL.get(model_id or "")
     rows = lan.var("lan_status_list") or []
     ports: list[LanPort] = []
     for row in rows:
         if not isinstance(row, list) or len(row) < 2:
             continue
         index = _int(row[0])
-        if index is None or not 1 <= index <= WEB_VISIBLE_LAN_PORTS:
+        if index is None:
             continue
-        name = lan.cfg_value(f"LogName{index - 1}") or f"LAN{index}"
+        name = lan.cfg_value(f"LogName{index - 1}")
+        if visible is not None:
+            if index not in visible:
+                continue
+            name = name or f"LAN{index}"
+        elif not name:
+            continue
         ports.append(
             LanPort(
                 index=index,

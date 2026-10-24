@@ -199,3 +199,12 @@ def test_access_mac_and_device_type(fixture_docs: dict) -> None:
     # en la fila "old-name" la MAC del lease es 00:00…; gana la fila Online con lease válido
     assert devices["02:00:00:00:00:03"].access_mac == "02:00:00:00:00:03"
     assert devices["02:00:00:00:00:05"].device_type == "lightbulb"
+
+
+def test_lan_ports_unknown_model_uses_all_named_ports(fixture_docs: dict) -> None:
+    """Modelo no catalogado (p. ej. un Livebox 7: 3 × 1G + 1 × 2,5G): todos los puertos con
+    nombre, en lugar de suponer los del Livebox 6."""
+    fixture_docs["router_status"].vars["hardware_model"] = "ARLTFIBRA7"
+    ports = build_router_data(fixture_docs).lan_ports
+    assert [p.name for p in ports] == ["LAN1", "LAN2", "LAN3", "LAN4", "2.5G LAN"]
+    assert ports[4].speed_mbps == 2500
