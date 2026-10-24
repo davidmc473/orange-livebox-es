@@ -1,0 +1,7 @@
+# Tests de la capa api/ (sin Home Assistant)
+pytest>=8
+pytest-asyncio>=0.24
+aiohttp>=3.10
+cryptography>=43
+# Tests de la integración (Linux/WSL/Docker; no compila en Windows)
+# pytest-homeassistant-custom-component

@@ -1,0 +1,22 @@
+{
+  "domain": "orange_livebox_es",
+  "name": "Orange Livebox (España)",
+  "codeowners": [
+    "@davidmc473"
+  ],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "livebox*"
+    },
+    {
+      "macaddress": "608D26*"
+    }
+  ],
+  "documentation": "https://github.com/davidmc473/orange-livebox-es",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/davidmc473/orange-livebox-es/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

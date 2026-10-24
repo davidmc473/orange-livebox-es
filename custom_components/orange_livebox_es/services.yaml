@@ -1,0 +1,29 @@
+set_device_name:
+  target:
+    entity:
+      integration: orange_livebox_es
+      domain: device_tracker
+  fields:
+    name:
+      required: true
+      example: "Portátil de David"
+      selector:
+        text:
+
+set_access_schedule:
+  target:
+    entity:
+      integration: orange_livebox_es
+      domain: device_tracker
+  fields:
+    monday: &day
+      required: false
+      example: "8-14,16-22"
+      selector:
+        text:
+    tuesday: *day
+    wednesday: *day
+    thursday: *day
+    friday: *day
+    saturday: *day
+    sunday: *day

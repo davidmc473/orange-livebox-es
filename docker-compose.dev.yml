@@ -1,0 +1,14 @@
+# Home Assistant de desarrollo con la integración montada en caliente.
+#   docker compose -f docker-compose.dev.yml up -d   → http://localhost:8123
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: ha-livebox-dev
+    ports:
+      - "8123:8123"
+    environment:
+      TZ: Europe/Madrid
+    volumes:
+      - ./.ha-config:/config
+      - ./custom_components/orange_livebox_es:/config/custom_components/orange_livebox_es:ro
+    restart: unless-stopped

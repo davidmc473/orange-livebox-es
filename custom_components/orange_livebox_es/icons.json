@@ -1,0 +1,126 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "internet": {
+        "default": "mdi:web-off",
+        "state": {
+          "on": "mdi:web"
+        }
+      },
+      "optical_link": {
+        "default": "mdi:led-off",
+        "state": {
+          "on": "mdi:led-on"
+        }
+      },
+      "voip_line": {
+        "default": "mdi:phone-off",
+        "state": {
+          "on": "mdi:phone"
+        }
+      },
+      "lan_port": {
+        "default": "mdi:ethernet-off",
+        "state": {
+          "on": "mdi:ethernet"
+        }
+      }
+    },
+    "sensor": {
+      "wan_ipv4": {
+        "default": "mdi:ip-network"
+      },
+      "wan_ipv6": {
+        "default": "mdi:ip-network-outline"
+      },
+      "wan_mode": {
+        "default": "mdi:wan"
+      },
+      "dns_servers": {
+        "default": "mdi:dns"
+      },
+      "wan_connected_since": {
+        "default": "mdi:clock-start"
+      },
+      "last_boot": {
+        "default": "mdi:restart"
+      },
+      "cpu_load": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "memory_usage": {
+        "default": "mdi:memory"
+      },
+      "connected_devices": {
+        "default": "mdi:devices"
+      },
+      "wifi_devices": {
+        "default": "mdi:wifi"
+      },
+      "ethernet_devices": {
+        "default": "mdi:ethernet"
+      },
+      "firewall_level": {
+        "default": "mdi:wall-fire"
+      },
+      "optical_rx_power": {
+        "default": "mdi:arrow-down-bold-outline"
+      },
+      "optical_tx_power": {
+        "default": "mdi:arrow-up-bold-outline"
+      },
+      "unicast_rx_frames": {
+        "default": "mdi:download-network"
+      },
+      "unicast_tx_frames": {
+        "default": "mdi:upload-network"
+      },
+      "wifi_channel_24g": {
+        "default": "mdi:wifi-cog"
+      },
+      "wifi_channel_5g": {
+        "default": "mdi:wifi-cog"
+      },
+      "wifi_ssid": {
+        "default": "mdi:wifi-settings"
+      },
+      "guest_wifi_ssid": {
+        "default": "mdi:account-multiple"
+      }
+    },
+    "switch": {
+      "wifi": {
+        "default": "mdi:wifi-off",
+        "state": {
+          "on": "mdi:wifi"
+        }
+      },
+      "guest_wifi": {
+        "default": "mdi:account-multiple-remove",
+        "state": {
+          "on": "mdi:account-multiple-check"
+        }
+      },
+      "remote_access": {
+        "default": "mdi:web-off",
+        "state": {
+          "on": "mdi:web-check"
+        }
+      },
+      "internet_access": {
+        "default": "mdi:web-cancel",
+        "state": {
+          "on": "mdi:web"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_device_name": {
+      "service": "mdi:rename"
+    },
+    "set_access_schedule": {
+      "service": "mdi:calendar-clock"
+    }
+  }
+}

@@ -1,0 +1,345 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Orange Livebox (Spain)",
+        "description": "Enter the address and administration credentials of your Livebox. By default the password is the WiFi key printed on the router label.",
+        "data": {
+          "host": "Host",
+          "username": "Username",
+          "password": "Password"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the router, usually 192.168.1.1.",
+          "username": "From the local network the web interface always uses `admin`.",
+          "password": "Router administration password."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate the Livebox",
+        "description": "The router at {host} rejected the stored password. Enter the current one.",
+        "data": {
+          "password": "Password"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure the Livebox",
+        "data": {
+          "host": "Host",
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "discovery_confirm": {
+        "title": "Discovered {model}",
+        "description": "A {model} was found at {host}. Enter its administration credentials to add it. By default the password is the WiFi key printed on the router label.",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the router.",
+      "invalid_auth": "Invalid credentials, or the router is busy with another administration session (close the router web page and try again).",
+      "login_locked": "The router has temporarily blocked logins after several failed attempts. Wait one minute and try again.",
+      "unsupported": "The device answered but it is not a supported Orange router.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This router is already configured.",
+      "reauth_successful": "Re-authentication was successful.",
+      "reconfigure_successful": "Reconfiguration was successful.",
+      "wrong_device": "The router at that address is not the one that was configured.",
+      "not_supported": "The discovered device is not a supported Orange Livebox.",
+      "already_in_progress": "Configuration is already in progress."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Livebox options",
+        "data": {
+          "scan_interval": "Polling interval",
+          "track_new_devices": "Enable new device trackers automatically",
+          "session_yield_minutes": "Session hand-over time"
+        },
+        "data_description": {
+          "scan_interval": "Seconds between two reads of the router (10–3600).",
+          "track_new_devices": "If disabled, new clients are created disabled unless they already belong to another device in Home Assistant.",
+          "session_yield_minutes": "The router only allows one administration session. If someone opens the router web page, Home Assistant stops logging in for these minutes so it does not kick them out."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "internet": {
+        "name": "Internet"
+      },
+      "optical_link": {
+        "name": "Optical link"
+      },
+      "voip_line": {
+        "name": "Phone line {line}",
+        "state_attributes": {
+          "number": {
+            "name": "Number"
+          }
+        }
+      },
+      "lan_port": {
+        "name": "Port {port}",
+        "state_attributes": {
+          "speed_mbps": {
+            "name": "Speed (Mbit/s)"
+          },
+          "duplex": {
+            "name": "Duplex"
+          }
+        }
+      }
+    },
+    "button": {
+      "reboot": {
+        "name": "Restart"
+      }
+    },
+    "device_tracker": {
+      "client": {
+        "state_attributes": {
+          "connection": {
+            "name": "Connection",
+            "state": {
+              "ethernet": "Ethernet",
+              "wifi_2_4ghz": "WiFi 2.4 GHz",
+              "wifi_5ghz": "WiFi 5 GHz",
+              "wifi_6ghz": "WiFi 6 GHz",
+              "unknown": "Unknown"
+            }
+          },
+          "interface": {
+            "name": "Interface"
+          },
+          "address_source": {
+            "name": "Address source"
+          },
+          "last_seen": {
+            "name": "Last seen"
+          },
+          "ssid": {
+            "name": "SSID"
+          },
+          "signal_strength": {
+            "name": "Signal strength"
+          },
+          "link_rate_mbps": {
+            "name": "Link rate (Mbit/s)"
+          },
+          "vendor_class": {
+            "name": "Vendor class"
+          }
+        }
+      }
+    },
+    "sensor": {
+      "wan_ipv4": {
+        "name": "Public IP"
+      },
+      "wan_ipv6": {
+        "name": "WAN IPv6"
+      },
+      "wan_mode": {
+        "name": "WAN mode"
+      },
+      "dns_servers": {
+        "name": "DNS servers"
+      },
+      "wan_connected_since": {
+        "name": "Connected since"
+      },
+      "last_boot": {
+        "name": "Last boot"
+      },
+      "cpu_load": {
+        "name": "CPU load"
+      },
+      "memory_usage": {
+        "name": "Memory usage"
+      },
+      "connected_devices": {
+        "name": "Connected devices",
+        "state_attributes": {
+          "wifi": {
+            "name": "WiFi"
+          },
+          "ethernet": {
+            "name": "Ethernet"
+          }
+        }
+      },
+      "wifi_devices": {
+        "name": "WiFi devices"
+      },
+      "ethernet_devices": {
+        "name": "Ethernet devices"
+      },
+      "firewall_level": {
+        "name": "Firewall level",
+        "state": {
+          "disabled": "Disabled",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High",
+          "custom": "Custom"
+        }
+      },
+      "optical_rx_power": {
+        "name": "Optical RX power"
+      },
+      "optical_tx_power": {
+        "name": "Optical TX power"
+      },
+      "optical_temperature": {
+        "name": "Transceiver temperature"
+      },
+      "optical_voltage": {
+        "name": "Transceiver voltage"
+      },
+      "optical_bias_current": {
+        "name": "Transceiver bias current"
+      },
+      "unicast_rx_frames": {
+        "name": "Unicast frames received"
+      },
+      "unicast_tx_frames": {
+        "name": "Unicast frames sent"
+      },
+      "wifi_channel_24g": {
+        "name": "WiFi 2.4 GHz channel"
+      },
+      "wifi_channel_5g": {
+        "name": "WiFi 5 GHz channel"
+      },
+      "wifi_ssid": {
+        "name": "WiFi SSID",
+        "state_attributes": {
+          "ssid_5g": {
+            "name": "5 GHz SSID"
+          }
+        }
+      },
+      "guest_wifi_ssid": {
+        "name": "Guest WiFi SSID"
+      }
+    },
+    "switch": {
+      "wifi": {
+        "name": "WiFi"
+      },
+      "guest_wifi": {
+        "name": "Guest WiFi"
+      },
+      "remote_access": {
+        "name": "Remote access",
+        "state_attributes": {
+          "port": {
+            "name": "Port"
+          }
+        }
+      },
+      "internet_access": {
+        "name": "Internet access",
+        "state_attributes": {
+          "mode": {
+            "name": "Mode",
+            "state": {
+              "allowed": "Always allowed",
+              "blocked": "Blocked",
+              "scheduled": "Scheduled"
+            }
+          },
+          "schedule": {
+            "name": "Schedule"
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "The router rejected the credentials."
+    },
+    "login_locked": {
+      "message": "The router has blocked logins for {seconds} s after several failed attempts."
+    },
+    "update_failed": {
+      "message": "Error reading the router: {error}"
+    },
+    "command_failed": {
+      "message": "The router could not execute the command: {error}"
+    },
+    "session_in_use": {
+      "message": "Another administration session is using the router (is its web page open?). Home Assistant hands over the session for {minutes} min."
+    },
+    "session_yielded": {
+      "message": "Home Assistant is handing over the router session; it will retry in {minutes} min."
+    },
+    "command_session_in_use": {
+      "message": "The router rejected the login because another administration session is active. Close the router web page and try again."
+    },
+    "feature_not_supported": {
+      "message": "This router model does not support this action."
+    },
+    "invalid_schedule": {
+      "message": "Invalid schedule: {error}"
+    }
+  },
+  "services": {
+    "set_device_name": {
+      "name": "Set device name",
+      "description": "Changes the name of the device in the router (as in “Customise” in its web interface).",
+      "fields": {
+        "name": {
+          "name": "Name",
+          "description": "New name. The router does not allow ' \" \\ / & ` $."
+        }
+      }
+    },
+    "set_access_schedule": {
+      "name": "Set internet access schedule",
+      "description": "Parental control: hours in which the device may use the Internet each day. Omitted days are allowed all day; leaving every day out removes the restriction.",
+      "fields": {
+        "monday": {
+          "name": "Monday",
+          "description": "Allowed hour ranges, end exclusive, e.g. 8-14,16-22. Use - to block the whole day."
+        },
+        "tuesday": {
+          "name": "Tuesday",
+          "description": "Allowed hour ranges, end exclusive, e.g. 8-14,16-22. Use - to block the whole day."
+        },
+        "wednesday": {
+          "name": "Wednesday",
+          "description": "Allowed hour ranges, end exclusive, e.g. 8-14,16-22. Use - to block the whole day."
+        },
+        "thursday": {
+          "name": "Thursday",
+          "description": "Allowed hour ranges, end exclusive, e.g. 8-14,16-22. Use - to block the whole day."
+        },
+        "friday": {
+          "name": "Friday",
+          "description": "Allowed hour ranges, end exclusive, e.g. 8-14,16-22. Use - to block the whole day."
+        },
+        "saturday": {
+          "name": "Saturday",
+          "description": "Allowed hour ranges, end exclusive, e.g. 8-14,16-22. Use - to block the whole day."
+        },
+        "sunday": {
+          "name": "Sunday",
+          "description": "Allowed hour ranges, end exclusive, e.g. 8-14,16-22. Use - to block the whole day."
+        }
+      }
+    }
+  }
+}
