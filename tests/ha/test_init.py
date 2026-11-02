@@ -4,13 +4,31 @@ from __future__ import annotations
 
 import json
 
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_HOME, STATE_NOT_HOME, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_HOME,
+    STATE_NOT_HOME,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.orange_livebox_es.api import InvalidAuth, LiveboxError, SessionConflict
+from custom_components.orange_livebox_es.api import (
+    ConnectionType,
+    InvalidAuth,
+    LiveboxError,
+    SessionConflict,
+)
 from custom_components.orange_livebox_es.const import CONF_TRACK_NEW_DEVICES, DOMAIN
 from custom_components.orange_livebox_es.diagnostics import (
     async_get_config_entry_diagnostics,
@@ -81,7 +99,7 @@ async def test_sensors_and_binary_sensors(
     disabled = [
         e.entity_id
         for e in er.async_entries_for_config_entry(registry, config_entry.entry_id)
-        if e.disabled_by is not None
+        if e.disabled_by is not None and e.unique_id.startswith(SERIAL)
     ]
     assert disabled == []
     # sin IPv6 en la línea no se crea la entidad IPv6 WAN
@@ -431,3 +449,173 @@ async def test_stale_lan_port_entity_is_removed(
     await _setup(hass, config_entry)
     assert registry.async_get(stale.entity_id) is None
     assert registry.async_get_entity_id("binary_sensor", DOMAIN, f"{SERIAL}_lan_port_4")
+
+
+# --- Spec 007: sensores por dispositivo ---------------------------------------------------
+
+LAPTOP = "02:00:00:00:00:01"  # por cable, 1000 Mbit/s
+PHONE = "02:00:00:00:00:02"  # WiFi 5 GHz, -55 dBm, 866 Mbit/s
+OFFLINE = "02:00:00:00:00:04"  # visto en el histórico, por cable
+
+
+def _enable_client_sensor(
+    hass: HomeAssistant, entry: MockConfigEntry, mac: str, key: str
+) -> er.RegistryEntry:
+    """Registra el sensor ya habilitado, como si el usuario lo hubiera activado."""
+    return er.async_get(hass).async_get_or_create(
+        "sensor", DOMAIN, f"{mac}_{key}", config_entry=entry, disabled_by=None
+    )
+
+
+async def _refresh(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+
+def _client_device(hass: HomeAssistant, entry: MockConfigEntry, mac: str) -> dr.DeviceEntry:
+    devices = dr.async_get(hass).async_get_devices(
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}, config_entry_id=entry.entry_id
+    )
+    assert len(devices) == 1
+    return devices[0]
+
+
+async def test_client_sensors_are_disabled_diagnostics_on_the_client_device(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: FakeClient
+) -> None:
+    await _setup(hass, config_entry)
+    ent_reg = er.async_get(hass)
+    phone_device = _client_device(hass, config_entry, PHONE)
+
+    for key in ("signal_strength", "link_rate"):
+        reg_entry = ent_reg.async_get(_entity_id(hass, "sensor", f"{PHONE}_{key}"))
+        assert reg_entry.device_id == phone_device.id
+        assert reg_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        assert reg_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+async def test_client_sensors_by_connection_type(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: FakeClient
+) -> None:
+    await _setup(hass, config_entry)
+    registry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(registry, config_entry.entry_id)
+    signal = sorted(e.unique_id for e in entries if e.unique_id.endswith("_signal_strength"))
+    link = [e.unique_id for e in entries if e.unique_id.endswith("_link_rate")]
+    # solo los tres clientes WiFi tienen señal; los cinco conectados, velocidad
+    assert signal == [
+        "02:00:00:00:00:02_signal_strength",
+        "02:00:00:00:00:05_signal_strength",
+        "02:00:00:00:00:06_signal_strength",
+    ]
+    assert len(link) == 5
+    assert registry.async_get_entity_id("sensor", DOMAIN, f"{LAPTOP}_signal_strength") is None
+    # ni el histórico del router: el cliente nunca visto conectado no tiene sensores
+    assert registry.async_get_entity_id("sensor", DOMAIN, f"{OFFLINE}_link_rate") is None
+
+
+async def test_client_sensor_values_and_units(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: FakeClient
+) -> None:
+    _enable_client_sensor(hass, config_entry, PHONE, "signal_strength")
+    _enable_client_sensor(hass, config_entry, PHONE, "link_rate")
+    _enable_client_sensor(hass, config_entry, LAPTOP, "link_rate")
+    await _setup(hass, config_entry)
+
+    signal = hass.states.get(_entity_id(hass, "sensor", f"{PHONE}_signal_strength"))
+    assert signal.state == "-55"
+    assert signal.attributes[ATTR_UNIT_OF_MEASUREMENT] == "dBm"
+    assert signal.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.SIGNAL_STRENGTH
+
+    rate = hass.states.get(_entity_id(hass, "sensor", f"{PHONE}_link_rate"))
+    assert rate.state == "866"
+    assert rate.attributes[ATTR_UNIT_OF_MEASUREMENT] == "Mbit/s"
+    assert rate.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DATA_RATE
+
+    wired = hass.states.get(_entity_id(hass, "sensor", f"{LAPTOP}_link_rate"))
+    assert wired.state == "1000"
+
+
+async def test_client_sensors_ignore_stale_values_when_disconnected(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: FakeClient
+) -> None:
+    """El router conserva la última señal de un cliente desconectado: no debe mostrarse."""
+    _enable_client_sensor(hass, config_entry, PHONE, "signal_strength")
+    _enable_client_sensor(hass, config_entry, PHONE, "link_rate")
+    await _setup(hass, config_entry)
+    signal = _entity_id(hass, "sensor", f"{PHONE}_signal_strength")
+    rate = _entity_id(hass, "sensor", f"{PHONE}_link_rate")
+
+    phone = mock_client.data.devices[PHONE]
+    phone.connected = False
+    assert phone.signal_strength == -55  # el dato sigue ahí
+    await _refresh(hass, config_entry)
+    assert hass.states.get(signal).state == STATE_UNKNOWN
+    assert hass.states.get(rate).state == STATE_UNKNOWN
+
+    phone.connected = True
+    phone.signal_strength = -61
+    await _refresh(hass, config_entry)
+    assert hass.states.get(signal).state == "-61"
+    assert hass.states.get(rate).state == "866"
+
+
+async def test_client_sensors_unavailable_while_yielding_session(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: FakeClient
+) -> None:
+    _enable_client_sensor(hass, config_entry, PHONE, "signal_strength")
+    await _setup(hass, config_entry)
+    signal = _entity_id(hass, "sensor", f"{PHONE}_signal_strength")
+
+    mock_client.error = SessionConflict("web abierta")
+    await _refresh(hass, config_entry)
+    assert hass.states.get(signal).state == STATE_UNAVAILABLE
+
+
+async def test_signal_sensor_created_when_client_moves_to_wifi(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_client: FakeClient,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    await _setup(hass, config_entry)
+    registry = er.async_get(hass)
+    assert registry.async_get_entity_id("sensor", DOMAIN, f"{LAPTOP}_signal_strength") is None
+
+    laptop = mock_client.data.devices[LAPTOP]
+    laptop.connection = ConnectionType.WIFI_5GHZ
+    await _refresh(hass, config_entry)
+    assert registry.async_get_entity_id("sensor", DOMAIN, f"{LAPTOP}_signal_strength")
+
+    # los ciclos siguientes no vuelven a añadirlo
+    await _refresh(hass, config_entry)
+    assert "does not generate unique IDs" not in caplog.text
+
+
+async def test_new_client_gets_its_sensors(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: FakeClient
+) -> None:
+    await _setup(hass, config_entry)
+    mock_client.data.devices[OFFLINE].connected = True
+    await _refresh(hass, config_entry)
+
+    reg_entry = er.async_get(hass).async_get(_entity_id(hass, "sensor", f"{OFFLINE}_link_rate"))
+    assert reg_entry.device_id == _client_device(hass, config_entry, OFFLINE).id
+
+
+async def test_client_sensor_survives_reload_while_client_is_away(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: FakeClient
+) -> None:
+    """Un móvil desconectado puede figurar «por cable» en el router: conserva su sensor."""
+    reg_entry = _enable_client_sensor(hass, config_entry, PHONE, "signal_strength")
+    await _setup(hass, config_entry)
+
+    phone = mock_client.data.devices[PHONE]
+    phone.connected = False
+    phone.connection = ConnectionType.ETHERNET
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(reg_entry.entity_id)
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get("restored")

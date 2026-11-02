@@ -12,6 +12,7 @@ firmware `02.03.01.035D build204`. La arquitectura admite añadir más modelos O
 |------|-----------|
 | **Presencia** | Un `device_tracker` por cada dispositivo visto conectado (IP, MAC, tipo de conexión, SSID, señal, velocidad de enlace) |
 | **Control de dispositivos** | Cada cliente es un dispositivo de HA con un switch **Acceso a Internet** (bloquear / permitir) y acciones para **programar horarios** de acceso y **renombrarlo** en el router |
+| **Medidas por dispositivo** | Sensores opcionales de **intensidad de señal** (dBm, solo WiFi) y **velocidad de enlace** (Mbit/s), con histórico |
 | **Internet** | Conectividad, IP pública, IPv6, modo WAN, DNS, *conectado desde* |
 | **Fibra (ONT)** | Enlace óptico, potencia RX/TX (dBm), temperatura, tensión y corriente del transceptor, contadores de tramas |
 | **Sistema** | Último arranque, carga de CPU, uso de memoria, nº de dispositivos (total / WiFi / cable), nivel de firewall |
@@ -80,6 +81,14 @@ introduce la contraseña de administración.
   ```
 
 - **Renombrar** en el router, acción `orange_livebox_es.set_device_name`.
+- **Señal y velocidad con histórico**: los sensores *Intensidad de señal* y *Velocidad de
+  enlace* de cada dispositivo vienen **deshabilitados**, porque pueden cambiar en cada
+  sondeo y harían crecer la base de datos. Actívalos en la página del dispositivo, o varios a
+  la vez en *Ajustes → Dispositivos y servicios → Entidades*. Home Assistant tarda unos
+  30 s en recargar la integración y empezar a mostrarlos. Si el dispositivo se desconecta,
+  valen *desconocido*. El router solo mide lo que conecta directamente a él: un dispositivo
+  detrás de un switch o de un punto de acceso externo figura como conectado por cable, sin
+  sensor de señal y con la velocidad del puerto del router en vez de la suya.
 
 El router admite como máximo 16 reglas de control parental.
 
@@ -124,6 +133,7 @@ specs/002-acceso-remoto/       switch de acceso remoto, entidades activas
 specs/003-convivencia-sesion/  sesión única del router: ceder la sesión
 specs/004-gestion-dispositivos/ acceso a Internet, horarios y nombre de los clientes
 specs/005-descubrimiento/      descubrimiento automático (DHCP/ARP)
+specs/007-sensores-dispositivo/ señal y velocidad de enlace por cliente
   spec.md        qué y por qué (historias, requisitos)
   research.md    hallazgos de la ingeniería inversa
   plan.md        diseño técnico y catálogo de entidades

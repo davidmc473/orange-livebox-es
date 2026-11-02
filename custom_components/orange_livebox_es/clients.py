@@ -5,7 +5,7 @@ gestionan los clientes vistos conectados alguna vez desde que existe la integrac
 ya conocidos se restauran desde el registro de entidades al arrancar.
 
 Cada cliente es un dispositivo de HA (conectado al router con ``via_device``) donde se
-agrupan su ``device_tracker`` y su switch de acceso a Internet.
+agrupan su ``device_tracker``, su switch de acceso a Internet y sus sensores.
 """
 
 from __future__ import annotations

@@ -146,7 +146,10 @@ y aborta si hay una llamada en curso.
 
 El tipo real de conexión (Ether/24G/5G), la señal y la velocidad se obtienen de
 `station_info.stations[]` (`connect_type`, `signal_strength`, `link_rate`,
-`connect_ssid`).
+`connect_ssid`). Las estaciones desconectadas (`online: "0"`) conservan sus últimos valores.
+
+Un cliente detrás de un switch o punto de acceso externo figura como `Ether`, con la
+`link_rate` del puerto del router, y no aparece en `cgi_wifi_client` (spec 007, §7).
 
 ## 7. Logout
 

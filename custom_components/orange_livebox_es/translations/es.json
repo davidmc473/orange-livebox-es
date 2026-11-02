@@ -232,6 +232,12 @@
       },
       "guest_wifi_ssid": {
         "name": "SSID WiFi de invitados"
+      },
+      "signal_strength": {
+        "name": "Intensidad de señal"
+      },
+      "link_rate": {
+        "name": "Velocidad de enlace"
       }
     },
     "switch": {

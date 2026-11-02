@@ -1,4 +1,4 @@
-"""Sensores del router (US3, US4, US5)."""
+"""Sensores del router (US3, US4, US5) y de sus clientes (spec 007)."""
 
 from __future__ import annotations
 
@@ -17,16 +17,22 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    Platform,
+    UnitOfDataRate,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo, format_mac
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .api import RouterData
+from .api import ConnectedDevice, RouterData
+from .const import DOMAIN
 from .coordinator import LiveboxConfigEntry, LiveboxDataUpdateCoordinator
 from .entity import LiveboxEntity
 
@@ -247,6 +253,45 @@ SENSORS: tuple[LiveboxSensorEntityDescription, ...] = (
 )
 
 
+@dataclass(frozen=True, kw_only=True)
+class LiveboxClientSensorEntityDescription(SensorEntityDescription):
+    value_fn: Callable[[ConnectedDevice], StateType]
+    #: si aún no se cumple, el sensor se crea en el ciclo en que se cumpla
+    exists_fn: Callable[[ConnectedDevice], bool] = lambda _: True
+
+
+# Deshabilitados por defecto: pueden cambiar en cada sondeo (spec 007, §4)
+CLIENT_SENSORS: tuple[LiveboxClientSensorEntityDescription, ...] = (
+    LiveboxClientSensorEntityDescription(
+        key="signal_strength",
+        translation_key="signal_strength",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        # por cable no hay señal: sería una entidad siempre «desconocida»
+        exists_fn=lambda d: d.connection.is_wifi,
+        value_fn=lambda d: d.signal_strength,
+    ),
+    LiveboxClientSensorEntityDescription(
+        key="link_rate",
+        translation_key="link_rate",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=0,
+        value_fn=lambda d: d.link_rate_mbps,
+    ),
+)
+
+
+def _client_unique_id(mac: str, key: str) -> str:
+    return f"{format_mac(mac)}_{key}"
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LiveboxConfigEntry,
@@ -258,6 +303,31 @@ async def async_setup_entry(
         for description in SENSORS
         if description.exists_fn(coordinator.data)
     )
+
+    registry = er.async_get(hass)
+    added: set[str] = set()
+
+    @callback
+    def _async_add_client_sensors() -> None:
+        """Se revisa en cada ciclo: un cliente puede pasar del cable a la WiFi."""
+        new: list[LiveboxClientSensor] = []
+        for mac in coordinator.clients.macs:
+            device = coordinator.data.devices.get(mac)
+            for description in CLIENT_SENSORS:
+                unique_id = _client_unique_id(mac, description.key)
+                if unique_id in added:
+                    continue
+                # Lo ya registrado se conserva aunque el cliente no esté ahora en la WiFi
+                if (device is not None and description.exists_fn(device)) or (
+                    registry.async_get_entity_id(Platform.SENSOR, DOMAIN, unique_id)
+                ):
+                    added.add(unique_id)
+                    new.append(LiveboxClientSensor(coordinator, mac, description))
+        if new:
+            async_add_entities(new)
+
+    _async_add_client_sensors()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_client_sensors))
 
 
 class LiveboxSensor(LiveboxEntity, SensorEntity):
@@ -297,3 +367,30 @@ class LiveboxSensor(LiveboxEntity, SensorEntity):
         if self.entity_description.attrs_fn is None:
             return None
         return self.entity_description.attrs_fn(self.coordinator.data)
+
+
+class LiveboxClientSensor(CoordinatorEntity[LiveboxDataUpdateCoordinator], SensorEntity):
+    """Medida de un cliente de la red, agrupada en su dispositivo de HA (spec 007)."""
+
+    _attr_has_entity_name = True
+    entity_description: LiveboxClientSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: LiveboxDataUpdateCoordinator,
+        mac: str,
+        description: LiveboxClientSensorEntityDescription,
+    ) -> None:
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._mac = mac
+        self._attr_unique_id = _client_unique_id(mac, description.key)
+        self._attr_device_info = DeviceInfo(connections={(CONNECTION_NETWORK_MAC, format_mac(mac))})
+
+    @property
+    def native_value(self) -> StateType:
+        device = self.coordinator.data.devices.get(self._mac)
+        # El router conserva los últimos valores de los clientes desconectados
+        if device is None or not device.connected:
+            return None
+        return self.entity_description.value_fn(device)
