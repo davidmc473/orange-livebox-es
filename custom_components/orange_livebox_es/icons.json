@@ -26,6 +26,11 @@
         }
       }
     },
+    "button": {
+      "phone_ring_test": {
+        "default": "mdi:phone-ring"
+      }
+    },
     "sensor": {
       "wan_ipv4": {
         "default": "mdi:ip-network"

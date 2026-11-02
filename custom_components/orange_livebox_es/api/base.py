@@ -17,6 +17,7 @@ class Feature(StrEnum):
     REMOTE_ACCESS_SWITCH = "remote_access_switch"
     DEVICE_ACCESS = "device_access"
     DEVICE_RENAME = "device_rename"
+    RING_TEST = "ring_test"
 
 
 class LiveboxClient(ABC):
@@ -63,4 +64,8 @@ class LiveboxClient(ABC):
         raise NotImplementedError
 
     async def async_set_device_name(self, mac: str, name: str) -> None:
+        raise NotImplementedError
+
+    async def async_ring_test(self) -> None:
+        """Hace sonar el teléfono conectado al router."""
         raise NotImplementedError

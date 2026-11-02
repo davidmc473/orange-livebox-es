@@ -619,3 +619,61 @@ async def test_client_sensor_survives_reload_while_client_is_away(
     state = hass.states.get(reg_entry.entity_id)
     assert state.state == STATE_UNKNOWN
     assert not state.attributes.get("restored")
+
+
+# --- Spec 008: hacer sonar el teléfono ----------------------------------------------------
+
+
+async def test_ring_button_presses_ring_test(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: FakeClient
+) -> None:
+    await _setup(hass, config_entry)
+    button = _entity_id(hass, "button", f"{SERIAL}_phone_ring_test")
+    assert er.async_get(hass).async_get(button).entity_category is EntityCategory.DIAGNOSTIC
+    assert "ring_test" not in mock_client.calls
+
+    await hass.services.async_call("button", "press", {ATTR_ENTITY_ID: button}, blocking=True)
+    assert mock_client.calls.count("ring_test") == 1
+
+
+async def test_ring_button_needs_a_phone_line(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: FakeClient
+) -> None:
+    mock_client.data.voip_lines.clear()
+    await _setup(hass, config_entry)
+    registry = er.async_get(hass)
+    assert registry.async_get_entity_id("button", DOMAIN, f"{SERIAL}_phone_ring_test") is None
+    assert registry.async_get_entity_id("button", DOMAIN, f"{SERIAL}_reboot")
+
+
+async def test_ring_button_error_is_reported(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: FakeClient
+) -> None:
+    from homeassistant.exceptions import HomeAssistantError
+
+    await _setup(hass, config_entry)
+
+    async def fail() -> None:
+        raise LiveboxError("rechazado")
+
+    mock_client.async_ring_test = fail  # type: ignore[method-assign]
+    button = _entity_id(hass, "button", f"{SERIAL}_phone_ring_test")
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call("button", "press", {ATTR_ENTITY_ID: button}, blocking=True)
+
+
+async def test_ring_button_works_while_yielding_session(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_client: FakeClient
+) -> None:
+    await _setup(hass, config_entry)
+    coordinator = config_entry.runtime_data
+    button = _entity_id(hass, "button", f"{SERIAL}_phone_ring_test")
+
+    mock_client.error = SessionConflict("web abierta")
+    await _refresh(hass, config_entry)
+    assert coordinator.yielding
+    assert hass.states.get(button).state != STATE_UNAVAILABLE
+
+    await hass.services.async_call("button", "press", {ATTR_ENTITY_ID: button}, blocking=True)
+    assert "ring_test" in mock_client.calls
+    assert not coordinator.yielding

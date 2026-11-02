@@ -214,6 +214,30 @@ async def test_reboot_refused_during_call(fake_router, session) -> None:
     assert state.applied == []
 
 
+async def test_ring_test(fake_router, session) -> None:
+    """Spec 008: igual que el botón «test» de phones.htm, sin cambiar la configuración."""
+    state, host = fake_router
+    await _client(session, host).async_ring_test()
+    assert state.applied == [
+        {
+            "referer": "phones.htm",
+            "action": "ui_voip_ring_test_osp",
+            "action_params": None,
+            "submit_button": "phones.htm",
+            "changes": {},
+        }
+    ]
+
+
+async def test_ring_test_relogins_when_kicked(fake_router, session) -> None:
+    state, host = fake_router
+    client = _client(session, host)
+    await client.async_login()
+    state.login_other_client()
+    await client.async_ring_test()
+    assert [a["action"] for a in state.applied] == ["ui_voip_ring_test_osp"]
+
+
 async def test_logout(fake_router, session) -> None:
     state, host = fake_router
     client = _client(session, host)

@@ -19,7 +19,7 @@ firmware `02.03.01.035D build204`. La arquitectura admite añadir más modelos O
 | **Puertos** | Estado de LAN1–LAN4 con velocidad y dúplex |
 | **WiFi** | Canal 2,4/5 GHz, SSID, **switch WiFi** y **switch WiFi de invitados** |
 | **Acceso remoto** | **Switch** para activar/desactivar el acceso remoto a la web del router (puerto como atributo) |
-| **Teléfono** | Registro de la línea VoIP |
+| **Teléfono** | Registro de la línea VoIP y botón **Hacer sonar el teléfono** |
 | **Acciones** | Botón **Reiniciar** |
 
 Además: flujo de configuración desde la UI, reautenticación, reconfiguración, opciones
@@ -134,6 +134,7 @@ specs/003-convivencia-sesion/  sesión única del router: ceder la sesión
 specs/004-gestion-dispositivos/ acceso a Internet, horarios y nombre de los clientes
 specs/005-descubrimiento/      descubrimiento automático (DHCP/ARP)
 specs/007-sensores-dispositivo/ señal y velocidad de enlace por cliente
+specs/008-prueba-telefono/     hacer sonar el teléfono fijo
   spec.md        qué y por qué (historias, requisitos)
   research.md    hallazgos de la ingeniería inversa
   plan.md        diseño técnico y catálogo de entidades

@@ -104,6 +104,9 @@
     "button": {
       "reboot": {
         "name": "Reiniciar"
+      },
+      "phone_ring_test": {
+        "name": "Hacer sonar el teléfono"
       }
     },
     "device_tracker": {

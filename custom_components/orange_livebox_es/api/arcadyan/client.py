@@ -70,6 +70,7 @@ SETTLE_SECONDS: dict[str, float] = {
     "ui_management": 5,
     "ui_parentalcontrol": 5,
     "ui_add_pclist": 5,
+    "ui_voip_ring_test_osp": 2,
 }
 #: caracteres que la web no admite en el nombre de un dispositivo
 INVALID_NAME_CHARS = "'\"\\/&`$"
@@ -110,6 +111,7 @@ class ArcadyanLiveboxClient(LiveboxClient):
             Feature.REMOTE_ACCESS_SWITCH,
             Feature.DEVICE_ACCESS,
             Feature.DEVICE_RENAME,
+            Feature.RING_TEST,
         }
     )
 
@@ -597,6 +599,14 @@ class ArcadyanLiveboxClient(LiveboxClient):
                 submit_button="network_connected.htm",
                 material=material,
             )
+
+    async def async_ring_test(self) -> None:
+        async with self._lock:
+            await self._with_session(self._retry_busy, self._ring_test, force=True)
+
+    async def _ring_test(self) -> None:
+        """Botón «test» de la web (spec 008): orden sin parámetros ni cambios."""
+        await self._apply("phones.htm", "ui_voip_ring_test_osp")
 
     # --- utilidades -------------------------------------------------------------------
     @property

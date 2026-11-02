@@ -34,6 +34,7 @@ PAGES = {
     "advanced_user_remote_access.htm",
     "network_access_schedule.htm",
     "network_customize.htm",
+    "phones.htm",
 }
 
 

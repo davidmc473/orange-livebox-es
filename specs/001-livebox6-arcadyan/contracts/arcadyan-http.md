@@ -114,6 +114,7 @@ Clave/IV del cifrado: los de la página origen.
 | Acceso remoto on/off (spec 002) | `advanced_user_remote_access.htm` | `ui_management` | `remote_management_mod` | `rm_en` |
 | Acceso a Internet de un cliente (spec 004) | `network_access_schedule.htm` | `ui_parentalcontrol` | `mac_filter_mod` | `macFilter_active`, `macFilter_enable_<n>`, `macFilter_mac_<n>`, `macFilter_sch_<n>_<0-6>` |
 | Nombre de un cliente (spec 004) | `network_customize.htm` | `ui_add_pclist` | `"<MAC>,<nombre>"` | `client_hostname<n>`, `client_mac<n>`, `client_deviceType<n>` |
+| Hacer sonar el teléfono (spec 008) | `phones.htm` | `ui_voip_ring_test_osp` | — | — |
 
 > ⚠️ Causas de `Server disconnected` en `apply_abstract.cgi` (verificadas en vivo, spec 003):
 > 1. la sesión ha sido expulsada por otro login (el router solo admite una sesión activa);

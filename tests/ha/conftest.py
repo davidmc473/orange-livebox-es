@@ -72,6 +72,9 @@ class FakeClient(LiveboxClient):
     async def async_set_device_name(self, mac: str, name: str) -> None:
         self.calls.append(("device_name", mac, name))
 
+    async def async_ring_test(self) -> None:
+        self.calls.append("ring_test")
+
     async def async_set_remote_access_enabled(self, enabled: bool) -> None:
         self.calls.append(("remote_access", enabled))
         assert self.data.remote_access is not None

@@ -104,6 +104,9 @@
     "button": {
       "reboot": {
         "name": "Restart"
+      },
+      "phone_ring_test": {
+        "name": "Ring phone"
       }
     },
     "device_tracker": {
